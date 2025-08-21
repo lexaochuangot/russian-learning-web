@@ -1,0 +1,336 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Russian Vocabulary Flashcards</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <meta name="description" content="Russian vocabulary flashcards – search, flip, favorite, study mode. Single-file page – drop into Netlify, GitHub Pages, Vercel."/>
+  <style>
+    .card-3d { transform-style: preserve-3d; perspective: 1000px; }
+    .card-inner { transition: transform .5s; transform-style: preserve-3d; }
+    .card.flipped .card-inner { transform: rotateY(180deg); }
+    .card-face { backface-visibility: hidden; }
+    .card-back { transform: rotateY(180deg); }
+  </style>
+</head>
+<body class="min-h-screen bg-slate-50 text-slate-800">
+  <!-- Header -->
+  <header class="sticky top-0 z-10 bg-white/80 backdrop-blur border-b border-slate-200">
+    <div class="max-w-6xl mx-auto px-4 py-4 flex items-center justify-between gap-4">
+      <div>
+        <h1 class="text-2xl md:text-3xl font-extrabold tracking-tight">Russian Vocabulary</h1>
+        <p class="text-sm md:text-base text-slate-500">1000 Most Common Words · Flip cards · Search · Favorites</p>
+      </div>
+      <div class="flex items-center gap-2">
+        <button id="studyBtn" class="px-3 py-2 rounded-2xl bg-slate-900 text-white text-sm hover:opacity-90">Study Mode</button>
+        <button id="newWordBtn" class="px-3 py-2 rounded-2xl bg-indigo-600 text-white text-sm hover:brightness-110">New Word</button>
+      </div>
+    </div>
+  </header>
+
+  <!-- Controls -->
+  <section class="max-w-6xl mx-auto px-4 py-4">
+    <div class="grid grid-cols-1 md:grid-cols-12 gap-3">
+      <div class="md:col-span-6">
+        <label class="block text-xs font-medium text-slate-500 mb-1" for="searchInput">Search</label>
+        <input id="searchInput" type="text" placeholder="Search Russian / English…" class="w-full px-4 py-2 rounded-xl border border-slate-300 focus:ring-2 focus:ring-indigo-500 outline-none bg-white"/>
+      </div>
+      <div class="md:col-span-3">
+        <label class="block text-xs font-medium text-slate-500 mb-1" for="filterFav">Filter</label>
+        <select id="filterFav" class="w-full px-4 py-2 rounded-xl border border-slate-300 bg-white">
+          <option value="all">All words</option>
+          <option value="fav">Favorites</option>
+          <option value="new">New (unseen)</option>
+          <option value="learned">Learned</option>
+        </select>
+      </div>
+      <div class="md:col-span-3">
+        <label class="block text-xs font-medium text-slate-500 mb-1" for="uploadInput">Load your list (CSV/JSON)</label>
+        <input id="uploadInput" type="file" accept=".csv,.json" class="block w-full text-sm text-slate-600 file:mr-3 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-sm file:font-semibold file:bg-slate-900 file:text-white hover:file:opacity-90" />
+      </div>
+    </div>
+
+    <div class="mt-3 text-sm text-slate-500 flex items-center gap-3">
+      <span id="countLabel">0 words</span>
+      <span>·</span>
+      <span>Favorites: <b id="favCount">0</b></span>
+      <span>·</span>
+      <span>Learned: <b id="learnedCount">0</b></span>
+    </div>
+  </section>
+
+  <!-- Grid -->
+  <main class="max-w-6xl mx-auto px-4 pb-16">
+    <div id="grid" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4"></div>
+
+    <div id="emptyState" class="hidden text-center py-16 text-slate-500">
+      <div class="text-xl font-semibold mb-2">No results</div>
+      <p>Try another search or clear filters.</p>
+    </div>
+  </main>
+
+  <!-- Template (hidden) -->
+  <template id="cardTpl">
+    <div class="card card-3d group">
+      <div class="card-inner relative rounded-2xl bg-white border border-slate-200 shadow-sm overflow-hidden">
+        <!-- FRONT -->
+        <div class="card-face p-4 min-h-[170px] flex flex-col justify-between">
+          <div>
+            <div class="flex items-start justify-between gap-2">
+              <h3 class="text-xl font-bold word-ru">—</h3>
+              <button class="favBtn shrink-0 rounded-xl px-2 py-1 text-xs border border-slate-200 hover:bg-slate-100">☆</button>
+            </div>
+            <p class="mt-1 text-sm text-slate-500 word-en">—</p>
+            <p class="mt-1 text-xs text-slate-400 italic word-note"></p>
+          </div>
+          <div class="flex items-center justify-between text-xs text-slate-500">
+            <button class="flipBtn px-2 py-1 rounded-lg bg-slate-900 text-white">Flip</button>
+            <label class="inline-flex items-center gap-2 cursor-pointer">
+              <input type="checkbox" class="learnChk w-4 h-4" />
+              <span>Learned</span>
+            </label>
+          </div>
+        </div>
+        <!-- BACK -->
+        <div class="card-face card-back absolute inset-0 p-4 bg-slate-900 text-slate-50 flex flex-col justify-between rounded-2xl">
+          <div>
+            <div class="flex items-start justify-between gap-2">
+              <h3 class="text-xl font-bold word-en-back">—</h3>
+              <button class="flipBtnBack shrink-0 rounded-xl px-2 py-1 text-xs border border-slate-700 hover:bg-slate-800">←</button>
+            </div>
+            <p class="mt-1 text-sm text-slate-300 word-ru-back">—</p>
+            <p class="mt-1 text-xs text-slate-400 italic word-note-back"></p>
+          </div>
+          <div class="text-[10px] opacity-60">Tip: Click anywhere on the card to flip.</div>
+        </div>
+      </div>
+    </div>
+  </template>
+
+  <script>
+    // --- Minimal starter data (replace with your own or upload CSV/JSON) ---
+    const STARTER_WORDS = [
+      { ru: "завтрак", en: "breakfast", note: "noun" },
+      { ru: "гулять", en: "to walk", note: "verb" },
+      { ru: "быть", en: "to be", note: "verb" },
+      { ru: "читать", en: "to read", note: "verb" },
+      { ru: "играть", en: "to play", note: "verb" },
+      { ru: "говорить", en: "to speak", note: "verb" },
+      { ru: "работать", en: "to work", note: "verb" },
+      { ru: "жить", en: "to live", note: "verb" },
+      { ru: "смотреть", en: "to watch", note: "verb" },
+      { ru: "писать", en: "to write", note: "verb" },
+      { ru: "слушать", en: "to listen", note: "verb" },
+      { ru: "ужинать", en: "to dine", note: "verb" },
+      { ru: "обедать", en: "to have lunch", note: "verb" },
+      { ru: "вставать", en: "to get up", note: "verb" },
+      { ru: "знать", en: "to know", note: "verb" },
+      { ru: "думать", en: "to think", note: "verb" },
+      { ru: "понимать", en: "to understand", note: "verb" },
+      { ru: "имя", en: "name", note: "noun" },
+      { ru: "история", en: "history", note: "noun" },
+      { ru: "стол", en: "table", note: "noun" }
+    ];
+
+    // --- State ---
+    let WORDS = [...STARTER_WORDS];
+    const $grid = document.getElementById('grid');
+    const $search = document.getElementById('searchInput');
+    const $filter = document.getElementById('filterFav');
+    const $upload = document.getElementById('uploadInput');
+    const $countLabel = document.getElementById('countLabel');
+    const $favCount = document.getElementById('favCount');
+    const $learnedCount = document.getElementById('learnedCount');
+    const $newWordBtn = document.getElementById('newWordBtn');
+    const $studyBtn = document.getElementById('studyBtn');
+
+    const LS_KEYS = {
+      FAVS: 'ru_favs',
+      LEARNED: 'ru_learned'
+    };
+
+    const favs = new Set(JSON.parse(localStorage.getItem(LS_KEYS.FAVS) || '[]'));
+    const learned = new Set(JSON.parse(localStorage.getItem(LS_KEYS.LEARNED) || '[]'));
+
+    function saveLS() {
+      localStorage.setItem(LS_KEYS.FAVS, JSON.stringify([...favs]));
+      localStorage.setItem(LS_KEYS.LEARNED, JSON.stringify([...learned]));
+    }
+
+    // --- Rendering ---
+    function render(list) {
+      $grid.innerHTML = '';
+      const tpl = document.getElementById('cardTpl');
+      list.forEach((w, idx) => {
+        const id = `${w.ru}::${w.en}`;
+        const node = tpl.content.cloneNode(true);
+        const wrap = node.querySelector('.card');
+        const inner = node.querySelector('.card-inner');
+
+        node.querySelector('.word-ru').textContent = w.ru;
+        node.querySelector('.word-en').textContent = w.en;
+        node.querySelector('.word-note').textContent = w.note || '';
+        node.querySelector('.word-en-back').textContent = w.en;
+        node.querySelector('.word-ru-back').textContent = w.ru;
+        node.querySelector('.word-note-back').textContent = w.note || '';
+
+        // Favorite
+        const favBtn = node.querySelector('.favBtn');
+        const isFav = favs.has(id);
+        favBtn.textContent = isFav ? '★' : '☆';
+        favBtn.addEventListener('click', (e) => {
+          e.stopPropagation();
+          if (favs.has(id)) favs.delete(id); else favs.add(id);
+          saveLS();
+          updateCounts();
+          favBtn.textContent = favs.has(id) ? '★' : '☆';
+        });
+
+        // Learned
+        const chk = node.querySelector('.learnChk');
+        chk.checked = learned.has(id);
+        chk.addEventListener('change', (e) => {
+          if (e.target.checked) learned.add(id); else learned.delete(id);
+          saveLS();
+          updateCounts();
+        });
+
+        // Flip handlers
+        const flipBtn = node.querySelector('.flipBtn');
+        const flipBtnBack = node.querySelector('.flipBtnBack');
+        function flip() { wrap.classList.toggle('flipped'); }
+        flipBtn.addEventListener('click', (e) => { e.stopPropagation(); flip(); });
+        flipBtnBack.addEventListener('click', (e) => { e.stopPropagation(); flip(); });
+        // Click anywhere to flip
+        wrap.addEventListener('click', flip);
+
+        $grid.appendChild(node);
+      });
+
+      document.getElementById('emptyState').classList.toggle('hidden', list.length !== 0);
+      updateCounts(list);
+    }
+
+    function updateCounts(currentList = null) {
+      const total = (currentList ?? filtered()).length;
+      $countLabel.textContent = `${total} word${total===1?'':'s'}`;
+      $favCount.textContent = favs.size;
+      $learnedCount.textContent = learned.size;
+    }
+
+    function filtered() {
+      const q = $search.value.trim().toLowerCase();
+      const mode = $filter.value;
+      return WORDS.filter(w => {
+        const id = `${w.ru}::${w.en}`;
+        const hits = !q || w.ru.toLowerCase().includes(q) || w.en.toLowerCase().includes(q);
+        if (!hits) return false;
+        if (mode === 'fav') return favs.has(id);
+        if (mode === 'new') return !learned.has(id);
+        if (mode === 'learned') return learned.has(id);
+        return true;
+      });
+    }
+
+    $search.addEventListener('input', () => render(filtered()));
+    $filter.addEventListener('change', () => render(filtered()));
+
+    // New Word: jump to a random filtered card by scrolling it into view and briefly highlighting
+    $newWordBtn.addEventListener('click', () => {
+      const list = filtered();
+      if (!list.length) return;
+      const pick = list[Math.floor(Math.random() * list.length)];
+      // find index and DOM node
+      const children = [...$grid.children];
+      const idx = WORDS.indexOf(pick);
+      const node = children[idx];
+      if (node) {
+        node.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        node.classList.add('ring-2','ring-indigo-500');
+        setTimeout(() => node.classList.remove('ring-2','ring-indigo-500'), 1000);
+      }
+    });
+
+    // Study mode: shuffle filtered words and re-render in that order
+    let studyMode = false;
+    $studyBtn.addEventListener('click', () => {
+      studyMode = !studyMode;
+      $studyBtn.textContent = studyMode ? 'Study: On' : 'Study Mode';
+      if (studyMode) {
+        WORDS = shuffle(filtered());
+      } else {
+        WORDS = unshuffled;
+      }
+      render(filtered());
+    });
+
+    function shuffle(arr) { return [...arr].sort(() => Math.random() - 0.5); }
+    const unshuffled = [...WORDS];
+
+    // Simple CSV/JSON loader
+    $upload.addEventListener('change', async (e) => {
+      const file = e.target.files?.[0];
+      if (!file) return;
+      const text = await file.text();
+      try {
+        let data;
+        if (file.name.endsWith('.json')) {
+          data = JSON.parse(text);
+        } else {
+          data = csvToObjects(text);
+        }
+        // Normalize to {ru,en,note}
+        WORDS = data.map(row => ({
+          ru: row.ru || row.Russian || row.RU || row[0] || '',
+          en: row.en || row.English || row.EN || row[1] || '',
+          note: row.note || row.pos || row.Note || row[2] || ''
+        })).filter(x => x.ru && x.en);
+        // keep a copy for turning study mode off
+        while (unshuffled.length) unshuffled.pop();
+        unshuffled.push(...WORDS);
+        render(filtered());
+      } catch (err) {
+        alert('Failed to parse file. Provide CSV with columns ru,en,note or JSON array of objects.');
+        console.error(err);
+      }
+    });
+
+    function csvToObjects(csv) {
+      const lines = csv.trim().split(/\r?\n/);
+      const header = lines[0].split(',').map(s => s.trim());
+      const hasHeader = header.some(h => /^(ru|en|russian|english|note|pos)$/i.test(h));
+      const rows = hasHeader ? lines.slice(1) : lines;
+      const out = [];
+      for (const line of rows) {
+        if (!line.trim()) continue;
+        const cols = splitCsv(line);
+        if (hasHeader) {
+          const obj = {};
+          header.forEach((h, i) => obj[h.trim()] = (cols[i]||'').trim());
+          out.push(obj);
+        } else {
+          out.push({0: (cols[0]||'').trim(), 1: (cols[1]||'').trim(), 2: (cols[2]||'').trim()});
+        }
+      }
+      return out;
+    }
+
+    function splitCsv(line) {
+      const res = [];
+      let cur = '', inQ = false;
+      for (let i=0; i<line.length; i++) {
+        const ch = line[i];
+        if (ch === '"') { inQ = !inQ; continue; }
+        if (ch === ',' && !inQ) { res.push(cur); cur=''; continue; }
+        cur += ch;
+      }
+      res.push(cur);
+      return res;
+    }
+
+    // Initial render
+    render(filtered());
+  </script>
+</body>
+</html>
