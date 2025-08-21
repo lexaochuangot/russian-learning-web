@@ -10,15 +10,15 @@ export default function Card({ front, back }: CardProps) {
 
   return (
     <div
-      className={`flashcard w-80 h-48 cursor-pointer`}
+      className={`flashcard cursor-pointer`}
       onClick={() => setFlipped(!flipped)}
     >
       <div className={`flashcard-inner ${flipped ? "flipped" : ""}`}>
         <div className="flashcard-front">
-          <h2 className="text-2xl font-bold">{front}</h2>
+          {front}
         </div>
         <div className="flashcard-back">
-          <p className="text-xl">{back}</p>
+          {back}
         </div>
       </div>
     </div>
