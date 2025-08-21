@@ -1,1 +1,12 @@
+[
+  {
+    "name": "Russian Basics",
+    "words": [
+      { "ru": "привет", "en": "hello" },
+      { "ru": "кот", "en": "cat" },
+      { "ru": "собака", "en": "dog" },
+      { "ru": "спасибо", "en": "thank you" }
+    ]
+  }
+]
 
