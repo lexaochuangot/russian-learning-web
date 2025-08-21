@@ -1,27 +1,37 @@
-import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
+import { AnimatePresence, motion } from "framer-motion";
 import Navbar from "./components/Navbar";
 import Home from "./pages/Home";
 import Study from "./pages/Study";
-import QuizPage from "./pages/QuizPage";
+import Stats from "./pages/Stats";
 import Settings from "./pages/Settings";
 
-function App() {
+export default function App() {
   return (
-    <BrowserRouter>
-      <div className="min-h-screen flex flex-col">
+    <Router>
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 dark:from-gray-900 dark:to-gray-800">
         <Navbar />
-        <div className="flex-1 p-4">
+        <AnimatePresence mode="wait">
           <Routes>
-            <Route path="/" element={<Home />} />
-            <Route path="/study" element={<Study />} />
-            <Route path="/quiz" element={<QuizPage />} />
+            <Route
+              path="/"
+              element={
+                <motion.div
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -10 }}
+                  transition={{ duration: 0.4 }}
+                >
+                  <Home />
+                </motion.div>
+              }
+            />
+            <Route path="/study/:id" element={<Study />} />
+            <Route path="/stats" element={<Stats />} />
             <Route path="/settings" element={<Settings />} />
           </Routes>
-        </div>
+        </AnimatePresence>
       </div>
-    </BrowserRouter>
+    </Router>
   );
 }
-
-export default App;
-
