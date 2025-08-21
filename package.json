@@ -24,7 +24,7 @@
     
     "@vitejs/plugin-react": "^4.2.1",
     "vite": "^5.0.0"
-
+    "vite-plugin-static-copy": "^1.0.5"
   }
 }
 
